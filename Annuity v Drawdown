@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pension Drawdown vs Annuity Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2333;
+    --border: #30363d;
+    --gold: #e8b14a;
+    --gold-dim: #8a6820;
+    --teal: #56d4c8;
+    --teal-dim: #2a6b66;
+    --red: #e05c5c;
+    --green: #4caf7d;
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --annuity-color: #e8b14a;
+    --draw-low: #56d4c8;
+    --draw-mid: #7b9ef0;
+    --draw-high: #c77dff;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: ‘IBM Plex Sans’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+font-size: 14px;
+}
+
+header {
+border-bottom: 1px solid var(–border);
+padding: 24px 40px;
+display: flex;
+align-items: baseline;
+gap: 20px;
+background: var(–surface);
+}
+
+header h1 {
+font-family: ‘Playfair Display’, serif;
+font-size: 22px;
+font-weight: 600;
+color: var(–gold);
+letter-spacing: 0.02em;
+}
+
+header span {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+color: var(–text-muted);
+letter-spacing: 0.08em;
+text-transform: uppercase;
+}
+
+.layout {
+display: grid;
+grid-template-columns: 300px 1fr;
+min-height: calc(100vh - 73px);
+}
+
+.sidebar {
+background: var(–surface);
+border-right: 1px solid var(–border);
+padding: 24px 20px;
+overflow-y: auto;
+}
+
+.sidebar h2 {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.15em;
+color: var(–text-muted);
+margin-bottom: 16px;
+padding-bottom: 8px;
+border-bottom: 1px solid var(–border);
+}
+
+.field {
+margin-bottom: 16px;
+}
+
+.field label {
+display: block;
+font-size: 12px;
+color: var(–text-muted);
+margin-bottom: 5px;
+font-family: ‘IBM Plex Mono’, monospace;
+}
+
+.field input[type=“number”], .field select {
+width: 100%;
+background: var(–surface2);
+border: 1px solid var(–border);
+border-radius: 4px;
+color: var(–text);
+padding: 7px 10px;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 13px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+.field input:focus, .field select:focus {
+border-color: var(–gold);
+}
+
+.field .hint {
+font-size: 11px;
+color: var(–text-muted);
+margin-top: 3px;
+font-style: italic;
+}
+
+.btn {
+width: 100%;
+padding: 10px;
+background: var(–gold);
+color: #0d1117;
+border: none;
+border-radius: 4px;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 12px;
+font-weight: 500;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+cursor: pointer;
+margin-top: 8px;
+transition: background 0.2s;
+}
+
+.btn:hover { background: #f0c05a; }
+
+.main {
+padding: 28px 32px;
+overflow-y: auto;
+}
+
+.tabs {
+display: flex;
+gap: 2px;
+margin-bottom: 24px;
+background: var(–surface);
+border-radius: 6px;
+padding: 3px;
+border: 1px solid var(–border);
+width: fit-content;
+}
+
+.tab {
+padding: 7px 18px;
+border-radius: 4px;
+cursor: pointer;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+color: var(–text-muted);
+transition: all 0.2s;
+}
+
+.tab.active {
+background: var(–surface2);
+color: var(–gold);
+border: 1px solid var(–gold-dim);
+}
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Summary cards */
+.cards {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 12px;
+margin-bottom: 24px;
+}
+
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 16px;
+}
+
+.card.highlight { border-color: var(–gold); }
+
+.card-label {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.12em;
+color: var(–text-muted);
+margin-bottom: 8px;
+}
+
+.card-value {
+font-family: ‘Playfair Display’, serif;
+font-size: 24px;
+font-weight: 600;
+color: var(–gold);
+}
+
+.card-sub {
+font-size: 11px;
+color: var(–text-muted);
+margin-top: 4px;
+font-family: ‘IBM Plex Mono’, monospace;
+}
+
+/* Chart area */
+.chart-wrap {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 20px;
+margin-bottom: 20px;
+}
+
+.chart-title {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+color: var(–text-muted);
+margin-bottom: 16px;
+}
+
+canvas {
+width: 100% !important;
+display: block;
+}
+
+.legend {
+display: flex;
+gap: 20px;
+flex-wrap: wrap;
+margin-top: 12px;
+}
+
+.legend-item {
+display: flex;
+align-items: center;
+gap: 7px;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 11px;
+color: var(–text-muted);
+}
+
+.legend-dot {
+width: 12px;
+height: 3px;
+border-radius: 2px;
+}
+
+/* Table */
+.table-wrap {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+overflow: auto;
+margin-bottom: 20px;
+}
+
+table {
+width: 100%;
+border-collapse: collapse;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 12px;
+}
+
+thead tr {
+background: var(–surface2);
+}
+
+th {
+padding: 10px 14px;
+text-align: right;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.1em;
+color: var(–text-muted);
+font-weight: 500;
+white-space: nowrap;
+border-bottom: 1px solid var(–border);
+}
+
+th:first-child { text-align: left; }
+
+td {
+padding: 8px 14px;
+text-align: right;
+border-bottom: 1px solid rgba(48,54,61,0.5);
+color: var(–text);
+}
+
+td:first-child {
+text-align: left;
+color: var(–text-muted);
+font-size: 11px;
+}
+
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.pos { color: var(–green); }
+.neg { color: var(–red); }
+.gold { color: var(–gold); }
+
+/* Tax section */
+.tax-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 16px;
+margin-bottom: 20px;
+}
+
+.tax-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 20px;
+}
+
+.tax-card h3 {
+font-family: ‘Playfair Display’, serif;
+font-size: 16px;
+margin-bottom: 14px;
+color: var(–gold);
+}
+
+.tax-row {
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+padding: 6px 0;
+border-bottom: 1px solid rgba(48,54,61,0.4);
+font-size: 12px;
+}
+
+.tax-row:last-child { border-bottom: none; }
+
+.tax-label { color: var(–text-muted); }
+.tax-val { font-family: ‘IBM Plex Mono’, monospace; }
+
+.verdict-box {
+background: linear-gradient(135deg, rgba(232,177,74,0.1), rgba(86,212,200,0.05));
+border: 1px solid var(–gold-dim);
+border-radius: 6px;
+padding: 20px 24px;
+margin-bottom: 20px;
+}
+
+.verdict-box h3 {
+font-family: ‘Playfair Display’, serif;
+font-size: 18px;
+color: var(–gold);
+margin-bottom: 12px;
+}
+
+.verdict-box p {
+color: var(–text);
+line-height: 1.7;
+font-size: 13px;
+margin-bottom: 8px;
+}
+
+.verdict-box p:last-child { margin-bottom: 0; }
+
+.badge {
+display: inline-block;
+padding: 2px 8px;
+border-radius: 3px;
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.08em;
+font-weight: 500;
+}
+
+.badge-gold { background: rgba(232,177,74,0.2); color: var(–gold); }
+.badge-teal { background: rgba(86,212,200,0.15); color: var(–teal); }
+.badge-red { background: rgba(224,92,92,0.15); color: var(–red); }
+.badge-green { background: rgba(76,175,125,0.15); color: var(–green); }
+
+.section-title {
+font-family: ‘IBM Plex Mono’, monospace;
+font-size: 10px;
+text-transform: uppercase;
+letter-spacing: 0.15em;
+color: var(–text-muted);
+margin: 20px 0 12px;
+padding-bottom: 6px;
+border-bottom: 1px solid var(–border);
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+@media (max-width: 900px) {
+.layout { grid-template-columns: 1fr; }
+.cards { grid-template-columns: 1fr 1fr; }
+.tax-grid, .two-col { grid-template-columns: 1fr; }
+header { padding: 16px 20px; }
+.main { padding: 16px; }
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <h1>Pension Drawdown vs Annuity</h1>
+  <span>Retirement Income Analysis · 2025</span>
+</header>
+
+<div class="layout">
+  <div class="sidebar">
+    <h2>Parameters</h2>
+
+```
+<div class="field">
+  <label>Pension Pot (£)</label>
+  <input type="number" id="pot" value="300000">
+</div>
+<div class="field">
+  <label>Income Required (£/yr)</label>
+  <input type="number" id="income" value="15000">
+</div>
+<div class="field">
+  <label>Annuity Rate (%)</label>
+  <input type="number" id="annRate" value="6.74" step="0.01">
+  <div class="hint">e.g. 6.74% quoted rate</div>
+</div>
+<div class="field">
+  <label>Current Age</label>
+  <input type="number" id="currentAge" value="65">
+</div>
+<div class="field">
+  <label>Model to Age</label>
+  <select id="toAge">
+    <option value="80">80</option>
+    <option value="85">85</option>
+    <option value="90" selected>90</option>
+    <option value="95">95</option>
+  </select>
+</div>
+<div class="field">
+  <label>Drawdown Growth — Low (%)</label>
+  <input type="number" id="growLow" value="3" step="0.5">
+</div>
+<div class="field">
+  <label>Drawdown Growth — Mid (%)</label>
+  <input type="number" id="growMid" value="5.5" step="0.5">
+</div>
+<div class="field">
+  <label>Drawdown Growth — High (%)</label>
+  <input type="number" id="growHigh" value="8" step="0.5">
+</div>
+<div class="field">
+  <label>Other Annual Income (£)</label>
+  <input type="number" id="otherIncome" value="11500">
+  <div class="hint">State pension, fixed pensions etc.</div>
+</div>
+<div class="field">
+  <label>Inheritance Route</label>
+  <select id="ihtRoute">
+    <option value="son">Son (IHT at 40%)</option>
+    <option value="spouse">Spouse (IHT exempt)</option>
+    <option value="both">Split: Son + Spouse</option>
+  </select>
+</div>
+
+<button class="btn" onclick="run()">▶ Run Analysis</button>
+```
+
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('overview')">Overview</div>
+      <div class="tab" onclick="switchTab('projections')">Projections</div>
+      <div class="tab" onclick="switchTab('tax')">Tax Analysis</div>
+      <div class="tab" onclick="switchTab('inheritance')">Inheritance</div>
+      <div class="tab" onclick="switchTab('verdict')">Verdict</div>
+    </div>
+
+```
+<!-- OVERVIEW -->
+<div id="panel-overview" class="panel active">
+  <div class="cards" id="summaryCards"></div>
+  <div class="chart-wrap">
+    <div class="chart-title">Cumulative Income Received (£)</div>
+    <canvas id="chartCumIncome" height="220"></canvas>
+    <div class="legend" id="legendCumIncome"></div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Pension Pot Value Over Time — Drawdown Scenarios (£)</div>
+    <canvas id="chartPot" height="220"></canvas>
+    <div class="legend" id="legendPot"></div>
+  </div>
+</div>
+
+<!-- PROJECTIONS -->
+<div id="panel-projections" class="panel">
+  <div class="table-wrap">
+    <table id="projTable"></table>
+  </div>
+</div>
+
+<!-- TAX -->
+<div id="panel-tax" class="panel">
+  <div id="taxContent"></div>
+</div>
+
+<!-- INHERITANCE -->
+<div id="panel-inheritance" class="panel">
+  <div id="ihtContent"></div>
+</div>
+
+<!-- VERDICT -->
+<div id="panel-verdict" class="panel">
+  <div id="verdictContent"></div>
+</div>
+```
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+<script>
+
+let charts = {};
+
+function fmt(n, dec=0) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const neg = n < 0;
+  const s = Math.abs(n).toLocaleString('en-GB', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+  return (neg ? '-' : '') + '£' + s;
+}
+
+function pct(n) { return (n*100).toFixed(1)+'%'; }
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function calcDrawdown(pot, income, growthPct, years) {
+  const rows = [];
+  let p = pot;
+  const g = growthPct / 100;
+  for (let yr = 1; yr <= years; yr++) {
+    const before = p;
+    const growth = p * g;
+    p = p + growth - income;
+    rows.push({ yr, before, growth, withdrawal: income, after: Math.max(0, p) });
+    if (p <= 0) {
+      // pot exhausted
+      for (let r = yr+1; r <= years; r++) rows.push({ yr: r, before:0, growth:0, withdrawal:0, after:0 });
+      break;
+    }
+  }
+  return rows;
+}
+
+function calcAnnuity(pot, rate, income, years) {
+  // Annuity: fixed income, pot gone on day 1
+  const annualIncome = pot * (rate/100);
+  const rows = [];
+  for (let yr = 1; yr <= years; yr++) {
+    rows.push({ yr, income: annualIncome });
+  }
+  return { income: annualIncome, rows };
+}
+
+function taxCalc(income, otherIncome) {
+  // 2024/25 UK tax
+  const personal = 12570;
+  const basicTop = 50270;
+  const higherTop = 125140;
+  const total = income + otherIncome;
+  let tax = 0;
+  const taxable = Math.max(0, total - personal);
+  const basic = Math.min(taxable, basicTop - personal);
+  const higher = Math.max(0, Math.min(taxable, higherTop - personal) - (basicTop - personal));
+  const additional = Math.max(0, taxable - (higherTop - personal));
+  tax = basic * 0.20 + higher * 0.40 + additional * 0.45;
+  return { tax: Math.max(0,tax), net: total - Math.max(0,tax), effective: total > 0 ? Math.max(0,tax)/total : 0 };
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function makeChart(id, config) {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, config);
+}
+
+function run() {
+  const pot = +document.getElementById('pot').value;
+  const income = +document.getElementById('income').value;
+  const annRate = +document.getElementById('annRate').value;
+  const currentAge = +document.getElementById('currentAge').value;
+  const toAge = +document.getElementById('toAge').value;
+  const growLow = +document.getElementById('growLow').value;
+  const growMid = +document.getElementById('growMid').value;
+  const growHigh = +document.getElementById('growHigh').value;
+  const otherIncome = +document.getElementById('otherIncome').value;
+  const ihtRoute = document.getElementById('ihtRoute').value;
+
+  const years = toAge - currentAge;
+  const ages = Array.from({length: years}, (_, i) => currentAge + i + 1);
+
+  const annualAnnuity = pot * (annRate/100);
+  const annRows = calcAnnuity(pot, annRate, income, years);
+
+  const lowRows = calcDrawdown(pot, income, growLow, years);
+  const midRows = calcDrawdown(pot, income, growMid, years);
+  const highRows = calcDrawdown(pot, income, growHigh, years);
+
+  // Pot remaining at end
+  const potLow = lowRows[years-1]?.after ?? 0;
+  const potMid = midRows[years-1]?.after ?? 0;
+  const potHigh = highRows[years-1]?.after ?? 0;
+
+  // Total income
+  const totalAnn = annualAnnuity * years;
+  const totalLow = lowRows.reduce((s,r) => s + r.withdrawal, 0);
+  const totalMid = midRows.reduce((s,r) => s + r.withdrawal, 0);
+  const totalHigh = highRows.reduce((s,r) => s + r.withdrawal, 0);
+
+  // Crossover: when does drawdown pot run out for low?
+  const exhaustYear = lowRows.findIndex(r => r.after <= 0);
+
+  // ======= OVERVIEW =======
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="card highlight">
+      <div class="card-label">Annuity Annual Income</div>
+      <div class="card-value">${fmt(annualAnnuity)}</div>
+      <div class="card-sub">${annRate}% of ${fmt(pot)} · fixed for life</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Drawdown Income Required</div>
+      <div class="card-value">${fmt(income)}</div>
+      <div class="card-sub">${pct(income/pot)} withdrawal rate · variable</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Annuity Surplus vs Need</div>
+      <div class="card-value ${annualAnnuity >= income ? 'pos' : 'neg'}">${fmt(annualAnnuity - income)}</div>
+      <div class="card-sub">${annualAnnuity >= income ? 'Annuity exceeds your £'+income.toLocaleString()+' need' : 'Annuity below required income'}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Pot at Age ${toAge} — Low (${growLow}%)</div>
+      <div class="card-value ${potLow > 0 ? 'pos' : 'neg'}">${potLow > 0 ? fmt(potLow) : 'Exhausted'}</div>
+      <div class="card-sub">${potLow > 0 ? 'Remaining after '+years+'yrs' : (exhaustYear>=0 ? 'Runs out age '+(currentAge+exhaustYear+1) : 'Fully depleted')}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Pot at Age ${toAge} — Mid (${growMid}%)</div>
+      <div class="card-value pos">${fmt(potMid)}</div>
+      <div class="card-sub">Remaining after ${years} yrs</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Pot at Age ${toAge} — High (${growHigh}%)</div>
+      <div class="card-value pos">${fmt(potHigh)}</div>
+      <div class="card-sub">Remaining after ${years} yrs</div>
+    </div>
+  `;
+
+  // Cumulative income chart
+  const cumAnn = ages.map((_, i) => annualAnnuity * (i+1));
+  const cumLow = ages.map((_, i) => lowRows.slice(0,i+1).reduce((s,r)=>s+r.withdrawal,0));
+  const cumMid = ages.map((_, i) => midRows.slice(0,i+1).reduce((s,r)=>s+r.withdrawal,0));
+  const cumHigh = ages.map((_, i) => highRows.slice(0,i+1).reduce((s,r)=>s+r.withdrawal,0));
+
+  makeChart('chartCumIncome', {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: [
+        { label: `Annuity (${annRate}%)`, data: cumAnn, borderColor: '#e8b14a', backgroundColor: 'rgba(232,177,74,0.08)', tension: 0.3, borderWidth: 2.5, pointRadius: 0 },
+        { label: `Drawdown ${growLow}%`, data: cumLow, borderColor: '#56d4c8', backgroundColor: 'rgba(86,212,200,0.05)', tension: 0.3, borderWidth: 2, borderDash: [5,3], pointRadius: 0 },
+        { label: `Drawdown ${growMid}%`, data: cumMid, borderColor: '#7b9ef0', backgroundColor: 'rgba(123,158,240,0.05)', tension: 0.3, borderWidth: 2, borderDash: [5,3], pointRadius: 0 },
+        { label: `Drawdown ${growHigh}%`, data: cumHigh, borderColor: '#c77dff', backgroundColor: 'rgba(199,125,255,0.05)', tension: 0.3, borderWidth: 2, borderDash: [5,3], pointRadius: 0 },
+      ]
+    },
+    options: chartOpts('£')
+  });
+
+  document.getElementById('legendCumIncome').innerHTML = legendHtml([
+    {color:'#e8b14a', label:`Annuity ${annRate}%`},
+    {color:'#56d4c8', label:`Drawdown ${growLow}%`},
+    {color:'#7b9ef0', label:`Drawdown ${growMid}%`},
+    {color:'#c77dff', label:`Drawdown ${growHigh}%`},
+  ]);
+
+  // Pot chart
+  const potLowArr = ages.map((_, i) => lowRows[i]?.after ?? 0);
+  const potMidArr = ages.map((_, i) => midRows[i]?.after ?? 0);
+  const potHighArr = ages.map((_, i) => highRows[i]?.after ?? 0);
+
+  makeChart('chartPot', {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: [
+        { label: `${growLow}% growth`, data: potLowArr, borderColor: '#56d4c8', backgroundColor: 'rgba(86,212,200,0.08)', tension: 0.3, borderWidth: 2, fill: true, pointRadius: 0 },
+        { label: `${growMid}% growth`, data: potMidArr, borderColor: '#7b9ef0', backgroundColor: 'rgba(123,158,240,0.08)', tension: 0.3, borderWidth: 2, fill: true, pointRadius: 0 },
+        { label: `${growHigh}% growth`, data: potHighArr, borderColor: '#c77dff', backgroundColor: 'rgba(199,125,255,0.08)', tension: 0.3, borderWidth: 2, fill: true, pointRadius: 0 },
+      ]
+    },
+    options: chartOpts('£')
+  });
+
+  document.getElementById('legendPot').innerHTML = legendHtml([
+    {color:'#56d4c8', label:`${growLow}% growth`},
+    {color:'#7b9ef0', label:`${growMid}% growth`},
+    {color:'#c77dff', label:`${growHigh}% growth`},
+  ]);
+
+  // ======= PROJECTIONS TABLE =======
+  let tHtml = `<thead><tr>
+    <th>Age</th>
+    <th>Annuity Income</th>
+    <th>Draw ${growLow}% — Pot</th>
+    <th>Draw ${growMid}% — Pot</th>
+    <th>Draw ${growHigh}% — Pot</th>
+    <th>Ann Cumulative</th>
+    <th>Draw Mid Cumulative</th>
+  </tr></thead><tbody>`;
+
+  ages.forEach((age, i) => {
+    const pL = lowRows[i]?.after ?? 0;
+    const pM = midRows[i]?.after ?? 0;
+    const pH = highRows[i]?.after ?? 0;
+    const cA = annualAnnuity * (i+1);
+    const cM = cumMid[i];
+    tHtml += `<tr>
+      <td>${age}</td>
+      <td class="gold">${fmt(annualAnnuity)}</td>
+      <td class="${pL > 0 ? 'pos':'neg'}">${pL > 0 ? fmt(pL) : '<span class="badge badge-red">Exhausted</span>'}</td>
+      <td class="${pM > 0 ? 'pos':'neg'}">${fmt(pM)}</td>
+      <td class="pos">${fmt(pH)}</td>
+      <td>${fmt(cA)}</td>
+      <td>${fmt(cM)}</td>
+    </tr>`;
+  });
+  tHtml += '</tbody>';
+  document.getElementById('projTable').innerHTML = tHtml;
+
+  // ======= TAX =======
+  const annTax = taxCalc(annualAnnuity, otherIncome);
+  const drawTax = taxCalc(income, otherIncome);
+  const totalTax = otherIncome > 0 ? taxCalc(0, otherIncome) : null;
+
+  // PCLS consideration: drawdown allows 25% PCLS tax-free from uncrystallised funds
+  const pclsAvail = pot * 0.25;
+
+  document.getElementById('taxContent').innerHTML = `
+    <div class="section-title">Annual Income Tax Comparison — 2024/25 rates</div>
+    <div class="tax-grid">
+      <div class="tax-card">
+        <h3>🏦 Annuity Route</h3>
+        <div class="tax-row"><span class="tax-label">Annuity income</span><span class="tax-val gold">${fmt(annualAnnuity)}</span></div>
+        <div class="tax-row"><span class="tax-label">Other income</span><span class="tax-val">${fmt(otherIncome)}</span></div>
+        <div class="tax-row"><span class="tax-label">Total gross income</span><span class="tax-val">${fmt(annualAnnuity + otherIncome)}</span></div>
+        <div class="tax-row"><span class="tax-label">Personal allowance</span><span class="tax-val">£12,570</span></div>
+        <div class="tax-row"><span class="tax-label">Income tax payable</span><span class="tax-val neg">${fmt(annTax.tax)}</span></div>
+        <div class="tax-row"><span class="tax-label">Effective rate</span><span class="tax-val neg">${pct(annTax.effective)}</span></div>
+        <div class="tax-row"><span class="tax-label">Net annual income</span><span class="tax-val pos">${fmt(annTax.net)}</span></div>
+        <div class="tax-row"><span class="tax-label">Net over ${years} years</span><span class="tax-val gold">${fmt(annTax.net * years)}</span></div>
+      </div>
+      <div class="tax-card">
+        <h3>📈 Drawdown Route</h3>
+        <div class="tax-row"><span class="tax-label">Drawdown withdrawal</span><span class="tax-val gold">${fmt(income)}</span></div>
+        <div class="tax-row"><span class="tax-label">Other income</span><span class="tax-val">${fmt(otherIncome)}</span></div>
+        <div class="tax-row"><span class="tax-label">Total gross income</span><span class="tax-val">${fmt(income + otherIncome)}</span></div>
+        <div class="tax-row"><span class="tax-label">Personal allowance</span><span class="tax-val">£12,570</span></div>
+        <div class="tax-row"><span class="tax-label">Income tax payable</span><span class="tax-val neg">${fmt(drawTax.tax)}</span></div>
+        <div class="tax-row"><span class="tax-label">Effective rate</span><span class="tax-val neg">${pct(drawTax.effective)}</span></div>
+        <div class="tax-row"><span class="tax-label">Net annual income</span><span class="tax-val pos">${fmt(drawTax.net)}</span></div>
+        <div class="tax-row"><span class="tax-label">Net over ${years} years</span><span class="tax-val pos">${fmt(drawTax.net * years)}</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Tax-Free Cash (PCLS) — Drawdown Advantage</div>
+    <div class="tax-card" style="margin-bottom:16px">
+      <div class="tax-row"><span class="tax-label">25% Pension Commencement Lump Sum available</span><span class="tax-val gold">${fmt(pclsAvail)}</span></div>
+      <div class="tax-row"><span class="tax-label">Taken up front, completely tax-free</span><span class="tax-val pos">£0 tax</span></div>
+      <div class="tax-row"><span class="tax-label">Remaining pot for drawdown</span><span class="tax-val">${fmt(pot - pclsAvail)}</span></div>
+      <div class="tax-row"><span class="tax-label">Annuity route: PCLS before purchase also possible</span><span class="tax-val pos">${fmt(pclsAvail)} tax-free</span></div>
+    </div>
+    <div class="verdict-box" style="margin-bottom:0">
+      <h3>Tax Efficiency Analysis</h3>
+      <p>With your other income of ${fmt(otherIncome)}, both routes put you into the ${(income + otherIncome) > 50270 ? 'higher (40%)' : (income + otherIncome) > 12570 ? 'basic (20%)' : 'nil'} rate band. 
+      ${annualAnnuity > income ? `The annuity pays <strong>${fmt(annualAnnuity - income)}</strong> more per year than your £${income.toLocaleString()} requirement, which means <strong>extra taxable income</strong> — potentially pushing you further into higher-rate territory.` : ''}</p>
+      <p><strong>PCLS Strategy:</strong> Both routes allow you to take up to ${fmt(pclsAvail)} completely tax-free before either purchasing an annuity or entering drawdown. This is strongly advisable and is one of the most valuable benefits in UK pension law.</p>
+      <p><strong>Phased Drawdown:</strong> In drawdown, you can control <em>when</em> and <em>how much</em> you crystallise each year, allowing precise tax band management — especially useful if your other income varies. The annuity locks in a fixed, fully-taxable income regardless of circumstance.</p>
+      ${otherIncome + income > 100000 ? `<p><span class="badge badge-red">⚠ Tapering Risk</span> Total income above £100,000 begins to withdraw the personal allowance (£1 lost per £2 over £100k). Check your total income position carefully.</p>` : ''}
+    </div>
+  `;
+
+  // ======= INHERITANCE =======
+  const ihtRows = [80, 85, 90, 95].map(age => {
+    const yrs = age - currentAge;
+    const pL = yrs > 0 ? (calcDrawdown(pot, income, growLow, yrs).slice(-1)[0]?.after ?? 0) : pot;
+    const pM = yrs > 0 ? (calcDrawdown(pot, income, growMid, yrs).slice(-1)[0]?.after ?? 0) : pot;
+    const pH = yrs > 0 ? (calcDrawdown(pot, income, growHigh, yrs).slice(-1)[0]?.after ?? 0) : pot;
+
+    const ihtFactor = ihtRoute === 'spouse' ? 0 : ihtRoute === 'son' ? 0.40 : 0.20;
+    const label = ihtRoute === 'spouse' ? 'Spouse (nil IHT)' : ihtRoute === 'son' ? 'Son after 40% IHT' : 'Blended (20% effective)';
+
+    return {
+      age, yrs,
+      potLow: pL, potMid: pM, potHigh: pH,
+      afterIhtLow: pL * (1 - ihtFactor),
+      afterIhtMid: pM * (1 - ihtFactor),
+      afterIhtHigh: pH * (1 - ihtFactor),
+      ihtFactor, label
+    };
+  });
+
+  // Note: from April 2027 pensions will be within IHT estate
+  // Currently pensions sit outside IHT (pre-2027 rules)
+
+  let ihtHtml = `
+    <div class="section-title">Pension Pot Remaining & Inheritance Value</div>
+    <div class="verdict-box" style="margin-bottom:16px">
+      <h3>⚠️ IHT Reform — April 2027</h3>
+      <p>From April 2027, unspent pension pots will fall within your estate for Inheritance Tax purposes. Prior to that date, SIPPs and drawdown funds sit <strong>outside</strong> your estate entirely — a major IHT planning advantage that the annuity route completely forfeits.</p>
+      <p>Route to son: 40% IHT will apply on death after April 2027. Route to spouse: always IHT-exempt under the spousal exemption regardless of pension reform. Nominations must be kept up to date with your pension trustee.</p>
+    </div>
+    <div class="table-wrap" style="margin-bottom:16px">
+      <table>
+        <thead><tr>
+          <th>Death at Age</th>
+          <th>Annuity Value</th>
+          <th>Drawdown Pot ${growLow}%</th>
+          <th>Drawdown Pot ${growMid}%</th>
+          <th>Drawdown Pot ${growHigh}%</th>
+          <th>After IHT (${ihtRoute==='spouse'?'nil':ihtRoute==='son'?'40%':'~20%'}) — Mid</th>
+        </tr></thead><tbody>`;
+
+  ihtRows.forEach(r => {
+    ihtHtml += `<tr>
+      <td>Age ${r.age} (${r.yrs} yrs)</td>
+      <td class="neg">£0 <span class="badge badge-red">Ceases</span></td>
+      <td class="${r.potLow > 0 ? 'pos':'neg'}">${r.potLow > 0 ? fmt(r.potLow) : 'Exhausted'}</td>
+      <td class="pos">${fmt(r.potMid)}</td>
+      <td class="pos">${fmt(r.potHigh)}</td>
+      <td class="gold">${fmt(r.afterIhtMid)}</td>
+    </tr>`;
+  });
+
+  ihtHtml += `</tbody></table></div>`;
+
+  ihtHtml += `
+    <div class="section-title">Key Considerations by Beneficiary</div>
+    <div class="two-col">
+      <div class="tax-card">
+        <h3>👶 Son — Taxable Beneficiary</h3>
+        <div class="tax-row"><span class="tax-label">Current IHT (pre-2027)</span><span class="tax-val pos">Exempt — outside estate</span></div>
+        <div class="tax-row"><span class="tax-label">From April 2027</span><span class="tax-val neg">40% IHT on pot value</span></div>
+        <div class="tax-row"><span class="tax-label">Income tax on drawdown</span><span class="tax-val neg">Son pays tax on income taken</span></div>
+        <div class="tax-row"><span class="tax-label">Annuity on death</span><span class="tax-val neg">Stops (no value passed)</span></div>
+        <div class="tax-row"><span class="tax-label">Pot at ${toAge} mid-growth</span><span class="tax-val gold">${fmt(potMid)}</span></div>
+        <div class="tax-row"><span class="tax-label">After 40% IHT</span><span class="tax-val">${fmt(potMid * 0.6)}</span></div>
+      </div>
+      <div class="tax-card">
+        <h3>💑 Spouse — IHT Exempt</h3>
+        <div class="tax-row"><span class="tax-label">IHT on transfer to spouse</span><span class="tax-val pos">Nil — spousal exemption</span></div>
+        <div class="tax-row"><span class="tax-label">Pot transfers intact</span><span class="tax-val pos">Full ${fmt(potMid)} mid scenario</span></div>
+        <div class="tax-row"><span class="tax-label">Annuity — joint life option</span><span class="tax-val">Reduced income but continues</span></div>
+        <div class="tax-row"><span class="tax-label">Single life annuity on death</span><span class="tax-val neg">Ceases immediately</span></div>
+        <div class="tax-row"><span class="tax-label">Best route for spouse</span><span class="tax-val gold">Drawdown — passes pot intact</span></div>
+      </div>
+    </div>`;
+
+  document.getElementById('ihtContent').innerHTML = ihtHtml;
+
+  // ======= VERDICT =======
+  const annuityBetter = annualAnnuity >= income;
+  const annuityTotalMid = annualAnnuity * years;
+  const drawTotalMid = totalMid + potMid;
+
+  document.getElementById('verdictContent').innerHTML = `
+    <div class="verdict-box">
+      <h3>📊 Overall Assessment</h3>
+      <p>Based on your parameters — a <strong>${fmt(pot)} pot</strong>, <strong>${fmt(income)}/yr</strong> income need, annuity rate of <strong>${annRate}%</strong>, and a ${years}-year horizon to age ${toAge}:</p>
+      <p>Your annuity would pay <strong>${fmt(annualAnnuity)}/yr</strong> — which is <strong>${fmt(annualAnnuity - income)} ${annuityBetter ? 'more' : 'less'}</strong> than your stated need. ${annuityBetter ? 'This means an annuity technically exceeds your income target, though the surplus is fully taxable.' : 'The annuity alone does not meet your income requirement.'}</p>
+    </div>
+
+    <div class="section-title">Scenario Breakdown at Age ${toAge}</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Annuity — Total Income</div>
+        <div class="card-value gold">${fmt(annualAnnuity * years)}</div>
+        <div class="card-sub">£0 residual estate value</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Drawdown ${growMid}% — Income + Pot</div>
+        <div class="card-value pos">${fmt(income * years + potMid)}</div>
+        <div class="card-sub">${fmt(income*years)} drawn + ${fmt(potMid)} pot remaining</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Drawdown ${growHigh}% — Income + Pot</div>
+        <div class="card-value pos">${fmt(income * years + potHigh)}</div>
+        <div class="card-sub">${fmt(income*years)} drawn + ${fmt(potHigh)} pot remaining</div>
+      </div>
+    </div>
+
+    <div class="section-title">Decision Framework</div>
+    <div class="two-col">
+      <div class="tax-card">
+        <h3 style="color:var(--gold)">✅ Choose Annuity If…</h3>
+        <div class="tax-row"><span class="tax-label">You prioritise certainty above all</span><span class="tax-val">Income guaranteed for life</span></div>
+        <div class="tax-row"><span class="tax-label">You have no surviving dependants</span><span class="tax-val">No pot to pass on anyway</span></div>
+        <div class="tax-row"><span class="tax-label">Poor health → longevity risk low</span><span class="tax-val">Enhanced annuity rates available</span></div>
+        <div class="tax-row"><span class="tax-label">You cannot manage investments</span><span class="tax-val">No sequence-of-returns risk</span></div>
+        <div class="tax-row"><span class="tax-label">Markets fear keeps you awake</span><span class="tax-val">Annuity removes all market risk</span></div>
+        <div class="tax-row"><span class="tax-label">Joint life annuity protects spouse</span><span class="tax-val">Provides ongoing income to spouse</span></div>
+      </div>
+      <div class="tax-card">
+        <h3 style="color:var(--teal)">✅ Choose Drawdown If…</h3>
+        <div class="tax-row"><span class="tax-label">You have pot to pass to heirs</span><span class="tax-val">Spouse gets full pot tax-free</span></div>
+        <div class="tax-row"><span class="tax-label">Growth exceeds withdrawal rate</span><span class="tax-val">${pct(income/pot)} draw vs ${growMid}% growth likely</span></div>
+        <div class="tax-row"><span class="tax-label">Tax band flexibility matters</span><span class="tax-val">Control when you crystallise</span></div>
+        <div class="tax-row"><span class="tax-label">You want PCLS reinvested</span><span class="tax-val">${fmt(pclsAvail)} tax-free into ISA etc.</span></div>
+        <div class="tax-row"><span class="tax-label">IHT planning is a priority</span><span class="tax-val">Pre-2027: exempt from estate</span></div>
+        <div class="tax-row"><span class="tax-label">You can tolerate market swings</span><span class="tax-val">Long-term growth likely wins</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Professional Recommendation</div>
+    <div class="verdict-box">
+      <h3>💡 The Nuanced Verdict</h3>
+      <p><strong>At ${annRate}%, the annuity rate is genuinely competitive</strong> — this is close to a 15-year breakeven vs. your pot. However, with a ${fmt(pot)} pot and a withdrawal rate of only ${pct(income/pot)}, drawdown is mathematically likely to outperform at mid-to-high growth rates, whilst also preserving an estate for your beneficiaries.</p>
+      <p><strong>The critical variable is your spouse.</strong> If your spouse would inherit the drawdown pot, they receive it IHT-free and can continue drawing from it — a potentially transformative outcome vs. a single-life annuity that simply stops. A <em>joint-life annuity</em> would protect them but at a significantly lower headline rate than 6.74%.</p>
+      <p><strong>A hybrid approach</strong> is worth considering: use a portion of the pot to buy a modest annuity that, combined with your other income, covers essential spending — then leave the remainder in drawdown for flexibility, growth, and estate planning. This is widely regarded as best practice in retirement income planning.</p>
+      <p><span class="badge badge-gold">Key Risk</span> The drawdown risk at ${growLow}% growth is real — ${potLow <= 0 ? 'the pot is exhausted before age '+toAge+', meaning you need sufficient other income or a plan B' : 'the pot survives but is reduced to '+fmt(potLow)+' by age '+toAge}. Stress-test against flat or negative returns in early retirement (sequence-of-returns risk).</p>
+      <p><span class="badge badge-teal">Next Step</span> Obtain a formal regulated advice comparison from a qualified pension adviser (FCA-authorised), ideally one who can access the whole of the annuity market and model your specific tax position, longevity, health, and family circumstances.</p>
+    </div>
+  `;
+}
+
+function chartOpts(prefix='£') {
+  return {
+    responsive: true,
+    animation: { duration: 600 },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1c2333',
+        borderColor: '#30363d',
+        borderWidth: 1,
+        titleColor: '#7d8590',
+        bodyColor: '#e6edf3',
+        titleFont: { family: 'IBM Plex Mono', size: 11 },
+        bodyFont: { family: 'IBM Plex Mono', size: 12 },
+        callbacks: {
+          label: ctx => ' ' + prefix + Math.round(ctx.parsed.y).toLocaleString('en-GB') + ' — ' + ctx.dataset.label
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#7d8590', font: { family: 'IBM Plex Mono', size: 10 }, maxTicksLimit: 10 },
+        grid: { color: 'rgba(48,54,61,0.5)' }
+      },
+      y: {
+        ticks: {
+          color: '#7d8590',
+          font: { family: 'IBM Plex Mono', size: 10 },
+          callback: v => prefix + (v >= 1000000 ? (v/1000000).toFixed(1)+'m' : v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
+        },
+        grid: { color: 'rgba(48,54,61,0.5)' }
+      }
+    }
+  };
+}
+
+function legendHtml(items) {
+  return items.map(i => `<div class="legend-item"><div class="legend-dot" style="background:${i.color}"></div>${i.label}</div>`).join('');
+}
+
+// Initial run
+run();
+</script>
+
+</body>
+</html>
