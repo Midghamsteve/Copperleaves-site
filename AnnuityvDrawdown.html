@@ -37,12 +37,13 @@ font-size: 14px;
 }
 
 header {
-border-bottom: 1px solid var(–border);
-padding: 24px 40px;
-display: flex;
-align-items: baseline;
-gap: 20px;
-background: var(–surface);
+  border-bottom: 1px solid var(--border);
+  padding: 24px 40px;
+  display: flex;
+  flex-direction: column;    /* add this for the header to be in a column*/
+  align-items: flex-start;   /* and this, so they’re left aligned */
+  gap: 4px;                  /* optional: smaller gap between lines */
+  background: var(--surface);
 }
 
 header h1 {
